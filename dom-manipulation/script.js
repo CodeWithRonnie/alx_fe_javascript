@@ -158,7 +158,7 @@ async function syncQuotes() {
     saveQuotes();
     populateCategories();
     showRandomQuote();
-    alert("Quotes updated with server!");
+    alert("Quotes synced with server!");
   }
 }
 
