@@ -16,10 +16,39 @@ function loadQuotes() {
       if (Array.isArray(parsed)) {
         quotes = parsed;
       }
-    } catch (e) {
-      // ignore invalid JSON
-    }
+    } catch (e) {}
   }
+}
+
+function showRandomQuote() {
+  const display = document.getElementById("quoteDisplay");
+  if (!display) return;
+  const filterEl = document.getElementById("categoryFilter");
+  const filter = filterEl ? filterEl.value : "all";
+  const pool = filter === "all" ? quotes : quotes.filter(q => q.category === filter);
+  if (!pool.length) {
+    display.textContent = "No quotes available for this category.";
+    return;
+  }
+  const i = Math.floor(Math.random() * pool.length);
+  const q = pool[i];
+  display.textContent = `"${q.text}" — ${q.category}`;
+  sessionStorage.setItem("lastQuote", JSON.stringify(q));
+}
+
+function addQuote() {
+  const textEl = document.getElementById("newQuoteText");
+  const catEl = document.getElementById("newQuoteCategory");
+  if (!textEl || !catEl) return;
+  const text = textEl.value.trim();
+  const category = catEl.value.trim();
+  if (!text || !category) return;
+  quotes.push({ text, category });
+  saveQuotes();
+  textEl.value = "";
+  catEl.value = "";
+  populateCategories();
+  showRandomQuote();
 }
 
 function populateCategories() {
@@ -37,45 +66,12 @@ function populateCategories() {
   if (saved) select.value = saved;
 }
 
-function displayRandomQuote() {
-  const display = document.getElementById("quoteDisplay");
-  if (!display) return;
-  const filterEl = document.getElementById("categoryFilter");
-  const filter = filterEl ? filterEl.value : "all";
-  const pool = filter === "all" ? quotes : quotes.filter(q => q.category === filter);
-  if (!pool.length) {
-    display.textContent = "No quotes available for this category.";
-    return;
-  }
-  const i = Math.floor(Math.random() * pool.length);
-  const q = pool[i];
-  display.textContent = `"${q.text}" — ${q.category}`;
-  try {
-    sessionStorage.setItem("lastQuote", JSON.stringify(q));
-  } catch (e) {}
-}
-
-function addQuote() {
-  const textEl = document.getElementById("newQuoteText");
-  const catEl = document.getElementById("newQuoteCategory");
-  if (!textEl || !catEl) return;
-  const text = textEl.value.trim();
-  const category = catEl.value.trim();
-  if (!text || !category) return;
-  quotes.push({ text, category });
-  saveQuotes();
-  textEl.value = "";
-  catEl.value = "";
-  populateCategories();
-  displayRandomQuote();
-}
-
 function filterQuotes() {
   const select = document.getElementById("categoryFilter");
   if (!select) return;
   const sel = select.value;
   localStorage.setItem("selectedCategory", sel);
-  displayRandomQuote();
+  showRandomQuote();
 }
 
 function exportToJsonFile() {
@@ -106,7 +102,7 @@ function importFromJsonFile(event) {
         saveQuotes();
         populateCategories();
         alert(`Imported ${valid.length} quotes.`);
-        displayRandomQuote();
+        showRandomQuote();
       } else {
         alert("No valid quote objects found in the file.");
       }
@@ -126,22 +122,14 @@ document.addEventListener("DOMContentLoaded", function() {
       const q = JSON.parse(last);
       const display = document.getElementById("quoteDisplay");
       if (display && q && q.text && q.category) display.textContent = `"${q.text}" — ${q.category}`;
+      else showRandomQuote();
     } catch (e) {
-      displayRandomQuote();
+      showRandomQuote();
     }
   } else {
-    displayRandomQuote();
+    showRandomQuote();
   }
 
   const newQuoteBtn = document.getElementById("newQuote");
-  if (newQuoteBtn) newQuoteBtn.addEventListener("click", displayRandomQuote);
-
-  const addBtn = document.getElementById("addQuoteBtn");
-  if (addBtn) addBtn.addEventListener("click", addQuote);
-
-  const importInput = document.getElementById("importFile");
-  if (importInput) importInput.addEventListener("change", importFromJsonFile);
-
-  const exportBtn = document.getElementById("exportBtn");
-  if (exportBtn) exportBtn.addEventListener("click", exportToJsonFile);
+  if (newQuoteBtn) newQuoteBtn.addEventListener("click", showRandomQuote);
 });
