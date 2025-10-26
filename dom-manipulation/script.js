@@ -13,9 +13,7 @@ function loadQuotes() {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        quotes = parsed;
-      }
+      if (Array.isArray(parsed)) quotes = parsed;
     } catch (e) {}
   }
 }
@@ -53,9 +51,7 @@ function addQuote() {
 
 function createAddQuoteForm() {
   const addButton = document.getElementById("addQuoteBtn");
-  if (addButton) {
-    addButton.addEventListener("click", addQuote);
-  }
+  if (addButton) addButton.addEventListener("click", addQuote);
 }
 
 function populateCategories() {
@@ -120,10 +116,36 @@ function importFromJsonFile(event) {
   reader.readAsText(file);
 }
 
+// Server sync
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
+function fetchServerQuotes() {
+  fetch(SERVER_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (!Array.isArray(data)) return;
+      let newQuotes = [];
+      data.forEach(item => {
+        if (item && item.title && item.body) {
+          const exists = quotes.find(q => q.text === item.title);
+          if (!exists) newQuotes.push({ text: item.title, category: item.body });
+        }
+      });
+      if (newQuotes.length) {
+        quotes.push(...newQuotes);
+        saveQuotes();
+        populateCategories();
+        showRandomQuote();
+        alert(`Server synced: ${newQuotes.length} new quotes added.`);
+      }
+    })
+    .catch(err => console.error("Server fetch failed:", err));
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   loadQuotes();
   populateCategories();
-  createAddQuoteForm(); // <- ADDED THIS LINE
+  createAddQuoteForm();
 
   const last = sessionStorage.getItem("lastQuote");
   if (last) {
@@ -141,4 +163,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
   const newQuoteBtn = document.getElementById("newQuote");
   if (newQuoteBtn) newQuoteBtn.addEventListener("click", showRandomQuote);
+
+  const syncBtn = document.getElementById("syncNow");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", () => {
+      fetchServerQuotes();
+      alert("Syncing with server...");
+    });
+  }
+
+  setInterval(fetchServerQuotes, 60000);
 });
