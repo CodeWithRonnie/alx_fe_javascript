@@ -17,9 +17,11 @@ function populateCategories() {
   });
 }
 
-function showRandomQuote() {
+function displayRandomQuote() {
   const display = document.getElementById("quoteDisplay");
-  const filter = document.getElementById("categoryFilter").value;
+  if (!display) return;
+  const filterEl = document.getElementById("categoryFilter");
+  const filter = filterEl ? filterEl.value : "all";
   const pool = filter === "all" ? quotes : quotes.filter(q => q.category === filter);
   if (!pool.length) {
     display.textContent = "No quotes available.";
@@ -28,6 +30,10 @@ function showRandomQuote() {
   const i = Math.floor(Math.random() * pool.length);
   const q = pool[i];
   display.textContent = `"${q.text}" — ${q.category}`;
+}
+
+function showRandomQuote() {
+  displayRandomQuote();
 }
 
 function addQuote() {
@@ -41,28 +47,24 @@ function addQuote() {
   textEl.value = "";
   catEl.value = "";
   populateCategories();
-  showRandomQuote();
+  displayRandomQuote();
 }
 
 function createAddQuoteForm() {
   const container = document.getElementById("addQuoteContainer");
   container.innerHTML = '';
-
   const inputText = document.createElement("input");
   inputText.type = "text";
   inputText.id = "newQuoteText";
   inputText.placeholder = "Enter a new quote";
-
   const inputCategory = document.createElement("input");
   inputCategory.type = "text";
   inputCategory.id = "newQuoteCategory";
   inputCategory.placeholder = "Enter quote category";
-
   const addBtn = document.createElement("button");
   addBtn.id = "addQuoteBtn";
   addBtn.textContent = "Add Quote";
   addBtn.addEventListener("click", addQuote);
-
   container.appendChild(inputText);
   container.appendChild(document.createElement("br"));
   container.appendChild(inputCategory);
@@ -73,9 +75,9 @@ function createAddQuoteForm() {
 document.addEventListener("DOMContentLoaded", function() {
   populateCategories();
   createAddQuoteForm();
-  showRandomQuote();
+  displayRandomQuote();
   const newQuoteBtn = document.getElementById("newQuote");
-  if (newQuoteBtn) newQuoteBtn.addEventListener("click", showRandomQuote);
+  if (newQuoteBtn) newQuoteBtn.addEventListener("click", displayRandomQuote);
   const categorySelect = document.getElementById("categoryFilter");
-  if (categorySelect) categorySelect.addEventListener("change", showRandomQuote);
+  if (categorySelect) categorySelect.addEventListener("change", displayRandomQuote);
 });
