@@ -16,16 +16,20 @@
 
   <button id="newQuote">Show New Quote</button>
 
-  <div>
+  <div class="add-quote">
     <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
     <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-    <button id="addQuoteBtn" onclick="addQuote()">Add Quote</button>
+    <button id="addQuoteBtn">Add Quote</button>
   </div>
 
-  <br>
+  <div class="storage-buttons">
+    <button id="exportBtn">Export Quotes (JSON)</button>
+    <input type="file" id="importFile" accept=".json" />
+  </div>
 
-  <button id="exportBtn" onclick="exportToJsonFile()">Export Quotes (JSON)</button>
-  <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+  <div class="sync">
+    <button id="syncNow">Sync Now (Server)</button>
+  </div>
 
   <script src="script.js"></script>
 </body>

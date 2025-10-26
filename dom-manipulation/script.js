@@ -117,60 +117,52 @@ function importFromJsonFile(event) {
 }
 
 // Server sync
-const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // mock API
 
-function fetchServerQuotes() {
-  fetch(SERVER_URL)
-    .then(res => res.json())
-    .then(data => {
-      if (!Array.isArray(data)) return;
-      let newQuotes = [];
-      data.forEach(item => {
-        if (item && item.title && item.body) {
-          const exists = quotes.find(q => q.text === item.title);
-          if (!exists) newQuotes.push({ text: item.title, category: item.body });
-        }
-      });
-      if (newQuotes.length) {
-        quotes.push(...newQuotes);
-        saveQuotes();
-        populateCategories();
-        showRandomQuote();
-        alert(`Server synced: ${newQuotes.length} new quotes added.`);
-      }
-    })
-    .catch(err => console.error("Server fetch failed:", err));
+async function fetchQuotesFromServer() {
+  try {
+    const res = await fetch(SERVER_URL);
+    const data = await res.json();
+    // assuming data is an array of objects with text & category
+    return data.map(item => ({ text: item.title || item.text, category: item.category || "General" }));
+  } catch (err) {
+    console.error("Failed to fetch from server:", err);
+    return [];
+  }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  loadQuotes();
-  populateCategories();
-  createAddQuoteForm();
-
-  const last = sessionStorage.getItem("lastQuote");
-  if (last) {
-    try {
-      const q = JSON.parse(last);
-      const display = document.getElementById("quoteDisplay");
-      if (display && q && q.text && q.category) display.textContent = `"${q.text}" — ${q.category}`;
-      else showRandomQuote();
-    } catch (e) {
-      showRandomQuote();
-    }
-  } else {
-    showRandomQuote();
-  }
-
-  const newQuoteBtn = document.getElementById("newQuote");
-  if (newQuoteBtn) newQuoteBtn.addEventListener("click", showRandomQuote);
-
-  const syncBtn = document.getElementById("syncNow");
-  if (syncBtn) {
-    syncBtn.addEventListener("click", () => {
-      fetchServerQuotes();
-      alert("Syncing with server...");
+async function postQuoteToServer(quote) {
+  try {
+    await fetch(SERVER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quote)
     });
+  } catch (err) {
+    console.error("Failed to post to server:", err);
   }
+}
 
-  setInterval(fetchServerQuotes, 60000);
-});
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  let updated = false;
+  
+  serverQuotes.forEach(sq => {
+    if (!quotes.some(lq => lq.text === sq.text && lq.category === sq.category)) {
+      quotes.push(sq);
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    saveQuotes();
+    populateCategories();
+    showRandomQuote();
+    alert("Quotes updated from server!");
+  }
+}
+
+// Periodic syncing every 30 seconds
+setInterval(syncQuotes, 30000);
+
+document.getElementById("syncNow")?.addEventListener("click", syncQuotes);
